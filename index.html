@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7天AI接单启动计划</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">🚀 7天AI接单启动计划</h1>
+            <p class="text-gray-600 mb-4">目标: Fiverr店铺上线+1个自动化服务</p>
+            
+            <div class="flex gap-4 items-center bg-blue-50 p-4 rounded-xl flex-wrap">
+                <div class="flex-1">
+                    <label class="text-sm text-gray-700 mr-2">每日提醒时间:</label>
+                    <input type="time" id="notifyTime" value="09:00" class="border rounded px-3 py-1">
+                </div>
+                <button onclick="enableNotify()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    开启提醒
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <div class="flex justify-between text-sm text-gray-600 mb-2">
+                <span>总体进度</span>
+                <span id="progressText">0 / 17 完成</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+                <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div id="taskList"></div>
+
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl p-6 text-center mt-6">
+            <h3 class="text-xl font-bold mb-2">💡 使用说明</h3>
+            <ul class="text-sm space-y-1 text-left max-w-2xl mx-auto">
+                <li>✅ 点击任务圆圈可标记完成</li>
+                <li>🔔 开启提醒后每天定时通知</li>
+                <li>📱 可保存此页面到主屏幕</li>
+                <li>🎯 进度自动保存在浏览器</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        var tasks = [
+            {d:1,t:"定位与准备",i:[{id:"t1",t:"确定自动化服务主题"},{id:"t2",t:"注册工具账号"}],a:"有服务方向+工具能用",te:"测试API调用",r:"喝咖啡庆祝"},
+            {d:2,t:"Demo1数据抓取",i:[{id:"t3",t:"拉取股票数据"},{id:"t4",t:"写入表格"}],a:"表格有数据",te:"换股票测试",r:"放松30分钟"},
+            {d:3,t:"Demo2定时推送",i:[{id:"t5",t:"添加定时器"},{id:"t6",t:"邮件配置"}],a:"收到邮件",te:"1分钟触发",r:"看一集剧"},
+            {d:4,t:"Demo3生成PDF",i:[{id:"t7",t:"PDF节点"},{id:"t8",t:"自动发送"}],a:"PDF生成成功",te:"换数据测试",r:"买小礼物"},
+            {d:5,t:"产品化文案",i:[{id:"t9",t:"组合Demo"},{id:"t10",t:"截图"},{id:"t11",t:"写文案"}],a:"文档完整",te:"朋友测试",r:"吃大餐"},
+            {d:6,t:"上架Fiverr",i:[{id:"t12",t:"注册卖家"},{id:"t13",t:"上架服务"},{id:"t14",t:"上传素材"}],a:"链接可分享",te:"其他账号查看",r:"发朋友圈"},
+            {d:7,t:"推广优化",i:[{id:"t15",t:"社交发布"},{id:"t16",t:"社区分享"},{id:"t17",t:"观察反馈"}],a:"有点击咨询",te:"查看数据",r:"大礼物"}
+        ];
+
+        var done = {};
+        
+        function load() {
+            try {
+                var s = localStorage.getItem('progress');
+                if (s) done = JSON.parse(s);
+            } catch(e) {}
+        }
+
+        function save() {
+            try {
+                localStorage.setItem('progress', JSON.stringify(done));
+            } catch(e) {}
+        }
+
+        function toggle(id) {
+            done[id] = !done[id];
+            save();
+            render();
+            updateBar();
+        }
+
+        function updateBar() {
+            var total = 17;
+            var finished = 0;
+            for (var k in done) if (done[k]) finished++;
+            var pct = Math.round((finished / total) * 100);
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('progressText').textContent = finished + ' / ' + total + ' 完成';
+        }
+
+        function render() {
+            var html = '';
+            for (var i = 0; i < tasks.length; i++) {
+                var day = tasks[i];
+                var fc = 0;
+                for (var j = 0; j < day.i.length; j++) if (done[day.i[j].id]) fc++;
+                var pct = Math.round((fc / day.i.length) * 100);
+                
+                html += '<div class="bg-white rounded-2xl shadow-lg p-6 mb-4">';
+                html += '<div class="flex justify-between mb-4">';
+                html += '<div><span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">Day '+day.d+'</span>';
+                html += '<h2 class="text-xl font-bold mt-2">'+day.t+'</h2></div>';
+                html += '<div class="text-2xl font-bold text-blue-600">'+pct+'%</div></div>';
+                
+                html += '<div class="space-y-2 mb-4">';
+                for (var j = 0; j < day.i.length; j++) {
+                    var item = day.i[j];
+                    var checked = done[item.id];
+                    html += '<div onclick="toggle(\''+item.id+'\')" class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">';
+                    html += '<div class="w-6 h-6 rounded-full border-2 flex items-center justify-center '+(checked?'bg-green-500 border-green-500':'border-gray-300')+'">';
+                    if (checked) html += '<span class="text-white">✓</span>';
+                    html += '</div><span class="'+(checked?'line-through text-gray-400':'text-gray-700')+'">'+item.t+'</span></div>';
+                }
+                html += '</div>';
+                
+                html += '<div class="grid md:grid-cols-3 gap-2 text-sm">';
+                html += '<div class="bg-green-50 p-2 rounded"><b>🎯 验收</b><br>'+day.a+'</div>';
+                html += '<div class="bg-purple-50 p-2 rounded"><b>🧪 测试</b><br>'+day.te+'</div>';
+                html += '<div class="bg-yellow-50 p-2 rounded"><b>🏆 奖励</b><br>'+day.r+'</div></div></div>';
+            }
+            document.getElementById('taskList').innerHTML = html;
+        }
+
+        function enableNotify() {
+            if (!window.Notification) {
+                alert('浏览器不支持通知');
+                return;
+            }
+            Notification.requestPermission().then(function(p) {
+                if (p === 'granted') {
+                    alert('✅ 通知已开启!');
+                }
+            });
+        }
+
+        load();
+        render();
+        updateBar();
+    </script>
+</body>
+</html>
